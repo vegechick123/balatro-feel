@@ -1,15 +1,17 @@
 
+using System;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System.Collections;
+using DG.Tweening;
 using UnityEngine.UI;
 
-public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler, IPointerUpHandler, IPointerDownHandler
+public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler, IPointerUpHandler, IPointerDownHandler,IPressAble,IHoverable
 {
+    public Transform visualContainer;
     private Canvas canvas;
-    private Image imageComponent;
     [SerializeField] private bool instantiateVisual = true;
     private VisualCardsHandler visualHandler;
     private Vector3 offset;
@@ -30,6 +32,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     [Header("States")]
     public bool isHovering;
     public bool isDragging;
+    public HorizontalCardHolder parent;
     [HideInInspector] public bool wasDragged;
 
     [Header("Events")]
@@ -41,20 +44,47 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     [HideInInspector] public UnityEvent<Card> EndDragEvent;
     [HideInInspector] public UnityEvent<Card, bool> SelectEvent;
 
+
+    private Transform _slotTransform;
+
+    public void DetachSlot()
+    {
+        transform.SetParent(null,true);
+    }
+    public void AttachSlot()
+    {
+        transform.SetParent(_slotTransform,true);
+    }
+    
+    public void SetParent(HorizontalCardHolder inParent)
+    {
+        HorizontalCardHolder originParent = parent; 
+        parent = inParent;
+        transform.parent.SetParent(inParent.transform,true);
+        if (originParent)
+        {
+            originParent.RemoveCard(this);
+        }
+    }
+
+    private void Awake()
+    {
+        _slotTransform = transform.parent;
+    }
+
     void Start()
     {
-        canvas = GetComponentInParent<Canvas>();
-        imageComponent = GetComponent<Image>();
 
         if (!instantiateVisual)
             return;
 
         visualHandler = FindObjectOfType<VisualCardsHandler>();
-        cardVisual = Instantiate(cardVisualPrefab, visualHandler ? visualHandler.transform : canvas.transform).GetComponent<CardVisual>();
+        cardVisual = Instantiate(cardVisualPrefab, visualHandler ? visualHandler.transform : visualContainer).GetComponent<CardVisual>();
         cardVisual.Initialize(this);
+        cardVisual.gameObject.SetActive(false);
     }
 
-    void Update()
+    public void Update()
     {
         ClampPosition();
 
@@ -79,11 +109,11 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     public void OnBeginDrag(PointerEventData eventData)
     {
         BeginDragEvent.Invoke(this);
+        PlayerInput.Instance.currentCard = this;
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         offset = mousePosition - (Vector2)transform.position;
         isDragging = true;
-        canvas.GetComponent<GraphicRaycaster>().enabled = false;
-        imageComponent.raycastTarget = false;
+        // canvas.GetComponent<GraphicRaycaster>().enabled = false;
 
         wasDragged = true;
     }
@@ -91,13 +121,13 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     public void OnDrag(PointerEventData eventData)
     {
     }
-
+    
     public void OnEndDrag(PointerEventData eventData)
     {
         EndDragEvent.Invoke(this);
+        transform.DOLocalMove( Vector3.zero, true ? .15f : 0).SetEase(Ease.OutBack);
+        PlayerInput.Instance.currentCard = null;
         isDragging = false;
-        canvas.GetComponent<GraphicRaycaster>().enabled = true;
-        imageComponent.raycastTarget = true;
 
         StartCoroutine(FrameWait());
 
@@ -112,14 +142,23 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     {
         PointerEnterEvent.Invoke(this);
         isHovering = true;
+        PlayerInput.Instance.hoveredCard = this;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         PointerExitEvent.Invoke(this);
         isHovering = false;
+        PlayerInput.Instance.hoveredCard = this;
     }
 
+
+    private void OnMouseDown()
+    {
+        if (Input.GetMouseButtonDown(0) != true)
+            return;
+        
+    }
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -185,6 +224,26 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     private void OnDestroy()
     {
         if(cardVisual != null)
-        Destroy(cardVisual.gameObject);
+            Destroy(cardVisual.gameObject);
+    }
+
+    public void OnPressBegin()
+    {
+        OnBeginDrag(null);
+    }
+
+    public void OnPressEnd()
+    {
+        OnEndDrag(null);
+    }
+
+    public void OnPressing()
+    {
+        
+    }
+
+    public void OnHover()
+    {
+        
     }
 }

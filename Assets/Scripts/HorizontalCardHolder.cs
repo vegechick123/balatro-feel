@@ -5,8 +5,11 @@ using Unity.VisualScripting;
 using UnityEngine;
 using DG.Tweening;
 using System.Linq;
+using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class HorizontalCardHolder : MonoBehaviour
+public class HorizontalCardHolder : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,IPointer
 {
 
     [SerializeField] private Card selectedCard;
@@ -18,9 +21,17 @@ public class HorizontalCardHolder : MonoBehaviour
     [Header("Spawn Settings")]
     [SerializeField] private int cardsToSpawn = 7;
     public List<Card> cards;
-
-    bool isCrossing = false;
+    
     [SerializeField] private bool tweenCardReturn = true;
+
+    private HorizontalLayoutGroup _horizontalLayoutGroup;
+
+    private TransformLayout _layout;
+    private void Awake()
+    {
+        _horizontalLayoutGroup = GetComponent<HorizontalLayoutGroup>();
+        _layout = GetComponent<TransformLayout>();
+    }
 
     void Start()
     {
@@ -30,31 +41,24 @@ public class HorizontalCardHolder : MonoBehaviour
         }
 
         rect = GetComponent<RectTransform>();
-        cards = GetComponentsInChildren<Card>().ToList();
-
+        foreach (var card in GetComponentsInChildren<Card>())
+        {
+            card.SetParent(this);
+            cards.Add(card);
+        }
+        
         int cardCount = 0;
 
+        /*PlayerInput.Instance.PointerEnterEvent.AddListener(CardPointerEnter);
+        PlayerInput.Instance.PointerExitEvent.AddListener(CardPointerExit);
+        PlayerInput.Instance.BeginDragEvent.AddListener(BeginDrag);
+        PlayerInput.Instance.EndDragEvent.AddListener(EndDrag);*/
         foreach (Card card in cards)
         {
-            card.PointerEnterEvent.AddListener(CardPointerEnter);
-            card.PointerExitEvent.AddListener(CardPointerExit);
-            card.BeginDragEvent.AddListener(BeginDrag);
-            card.EndDragEvent.AddListener(EndDrag);
             card.name = cardCount.ToString();
             cardCount++;
         }
-
-        StartCoroutine(Frame());
-
-        IEnumerator Frame()
-        {
-            yield return new WaitForSecondsRealtime(.1f);
-            for (int i = 0; i < cards.Count; i++)
-            {
-                if (cards[i].cardVisual != null)
-                    cards[i].cardVisual.UpdateIndex(transform.childCount);
-            }
-        }
+        _layout.Refresh();
     }
 
     private void BeginDrag(Card card)
@@ -107,38 +111,109 @@ public class HorizontalCardHolder : MonoBehaviour
             }
         }
 
-        if (selectedCard == null)
+        Card currentCard = PlayerInput.Instance.currentCard;
+        
+        if (PlayerInput.Instance.currentHolder != this|| currentCard == null)
             return;
 
-        if (isCrossing)
-            return;
 
+       //  Debug.Log($"{this},Run");
+        
+        
         for (int i = 0; i < cards.Count; i++)
         {
+            if (cards[i].cardVisual != null)
+                cards[i].cardVisual.UpdateIndex(transform.childCount);
+        }
 
-            if (selectedCard.transform.position.x > cards[i].transform.position.x)
+        if (cards.Contains(currentCard))
+        {
+            int originIndex = cards.IndexOf(currentCard);
+            for (int i = 0; i < cards.Count; i++)
             {
-                if (selectedCard.ParentIndex() < cards[i].ParentIndex())
+                /*if (cards[i] == currentCard)
                 {
-                    Swap(i);
-                    break;
-                }
-            }
+                    if (i + 1 >= cards.Count || currentCard.transform.position.x < cards[i + 1].transform.position.x)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }*/
 
-            if (selectedCard.transform.position.x < cards[i].transform.position.x)
-            {
-                if (selectedCard.ParentIndex() > cards[i].ParentIndex())
+                //Debug.Log($"{currentCard.transform.position.x}," );
+                int compareIndex = i<originIndex? i :i + 1;
+                if (i + 1 >= cards.Count || currentCard.transform.position.x < cards[compareIndex].transform.position.x)
                 {
-                    Swap(i);
+                    if (i != originIndex)
+                    {
+                        MoveCardTo(currentCard,i);
+                    }
                     break;
                 }
             }
         }
+        else
+        {
+            for (int i = 0; i < cards.Count+1; i++)
+            {
+                if (i == cards.Count||currentCard.transform.position.x < cards[i].transform.position.x)
+                {
+                    InsertCardAt(currentCard,i);
+                    break;
+                    /*if (currentCard.GetComponentInParent<HorizontalCardHolder>()!=this)
+                    {
+                        InsertCardAt(currentCard,i);
+                        break;
+                    }*/
+                }
+
+                /*if (currentCard.transform.position.x < cards[i].transform.position.x)
+                {
+                    if (currentCard.GetComponentInParent<HorizontalCardHolder>()!=this)
+                    {
+                        InsertCardAt(currentCard,i);
+                        break;
+                    }
+                }*/
+            }
+        }
+
     }
 
+    void MoveCardTo(Card insetCard, int index)
+    {
+        Debug.Log($"Move :{insetCard},{index}");
+        Debug.Assert(cards.Contains(insetCard));
+        cards.Remove(insetCard);
+        cards.Insert(index,insetCard);
+        Transform cardParent = insetCard.transform.parent;
+        cardParent.transform.SetSiblingIndex(index);
+        insetCard.DetachSlot();
+        _layout.Refresh();
+        insetCard.AttachSlot();
+    }
+    void InsertCardAt(Card insetCard,int index)
+    {
+        Debug.Log($"{insetCard},{index}");
+        Debug.Assert(!cards.Contains(insetCard));
+        Transform cardParent = insetCard.transform.parent;
+        insetCard.SetParent(this);
+        cards.Insert(index,insetCard);
+        cardParent.transform.SetSiblingIndex(index);
+        foreach (Card card in cards)
+        {
+            card.cardVisual.UpdateIndex(transform.childCount);
+            
+        }
+        insetCard.DetachSlot();
+        _layout.Refresh();
+        insetCard.AttachSlot();
+    }
     void Swap(int index)
     {
-        isCrossing = true;
 
         Transform focusedParent = selectedCard.transform.parent;
         Transform crossedParent = cards[index].transform.parent;
@@ -146,8 +221,6 @@ public class HorizontalCardHolder : MonoBehaviour
         cards[index].transform.SetParent(focusedParent);
         cards[index].transform.localPosition = cards[index].selected ? new Vector3(0, cards[index].selectionOffset, 0) : Vector3.zero;
         selectedCard.transform.SetParent(crossedParent);
-
-        isCrossing = false;
 
         if (cards[index].cardVisual == null)
             return;
@@ -162,4 +235,32 @@ public class HorizontalCardHolder : MonoBehaviour
         }
     }
 
+    public void RemoveCard(Card card)
+    {
+        Debug.Assert(card.parent != this, "Should call after set card parent!");
+        cards.Remove(card);
+        _layout.Refresh();
+    }
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        PlayerInput.Instance.currentHolder = this;
+        return;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (PlayerInput.Instance.currentHolder == this)
+            PlayerInput.Instance.currentHolder = null;
+        return;
+    }
+
+    public void OnPointerEnter()
+    {
+        OnPointerEnter(null);
+    }
+
+    public void OnPointerExit()
+    {
+        OnPointerExit(null);
+    }
 }
