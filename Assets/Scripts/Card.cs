@@ -45,7 +45,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     [HideInInspector] public UnityEvent<Card, bool> SelectEvent;
 
 
-    private Transform _slotTransform;
+    public Transform slotTransform { get; private set; }
 
     public void DetachSlot()
     {
@@ -53,26 +53,26 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     }
     public void AttachSlot()
     {
-        transform.SetParent(_slotTransform,true);
+        transform.SetParent(slotTransform,true);
     }
     
-    public void SetParent(CardContainer inParent)
+    public void SetParent(CardContainer inParent,int index = -1)
     {
-        CardContainer originParent = parent; 
-        parent = inParent;
-        transform.parent.SetParent(inParent.transform,true);
+        CardContainer originParent = parent;
+        
+        parent = null;
         if (originParent)
         {
             originParent.RemoveCard(this);
         }
-        
-        parent.AddCard(this);
-        
+        inParent.AddCard(this,index);
+        parent = inParent;
+        slotTransform.parent = parent.transform;
     }
-
+    
     private void Awake()
     {
-        _slotTransform = transform.parent;
+        slotTransform = transform.parent;
     }
 
     void Start()
@@ -84,7 +84,6 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         visualHandler = FindObjectOfType<VisualCardsHandler>();
         cardVisual = Instantiate(cardVisualPrefab, visualHandler ? visualHandler.transform : visualContainer).GetComponent<CardVisual>();
         cardVisual.Initialize(this);
-        cardVisual.gameObject.SetActive(false);
     }
 
     public void Update()
@@ -115,10 +114,11 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         PlayerInput.Instance.currentCard = this;
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         offset = mousePosition - (Vector2)transform.position;
+        
         isDragging = true;
         // canvas.GetComponent<GraphicRaycaster>().enabled = false;
-
         wasDragged = true;
+        DetachSlot();
     }
 
     public void OnDrag(PointerEventData eventData)
@@ -131,7 +131,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         transform.DOLocalMove( Vector3.zero, true ? .15f : 0).SetEase(Ease.OutBack);
         PlayerInput.Instance.currentCard = null;
         isDragging = false;
-
+        AttachSlot();
         StartCoroutine(FrameWait());
 
         IEnumerator FrameWait()
@@ -211,17 +211,17 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
 
     public int SiblingAmount()
     {
-        return transform.parent.CompareTag("Slot") ? transform.parent.parent.childCount - 1 : 0;
+        return slotTransform.CompareTag("Slot") ? slotTransform.parent.childCount - 1 : 0;
     }
 
     public int ParentIndex()
     {
-        return transform.parent.CompareTag("Slot") ? transform.parent.GetSiblingIndex() : 0;
+        return slotTransform.CompareTag("Slot") ? slotTransform.GetSiblingIndex() : 0;
     }
 
     public float NormalizedPosition()
     {
-        return transform.parent.CompareTag("Slot") ? ExtensionMethods.Remap((float)ParentIndex(), 0, (float)(transform.parent.parent.childCount - 1), 0, 1) : 0;
+        return slotTransform.CompareTag("Slot") ? ExtensionMethods.Remap((float)ParentIndex(), 0, (float)(slotTransform.parent.childCount - 1), 0, 1) : 0;
     }
 
     private void OnDestroy()

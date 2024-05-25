@@ -91,7 +91,7 @@ public class CardVisual : MonoBehaviour
 
     public void UpdateIndex(int length)
     {
-        transform.SetSiblingIndex(parentCard.transform.parent.GetSiblingIndex());
+        transform.SetSiblingIndex(parentCard.slotTransform.GetSiblingIndex());
     }
 
     void Update()

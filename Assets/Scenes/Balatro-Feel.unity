@@ -326,7 +326,6 @@ GameObject:
   - component: {fileID: 176730506}
   - component: {fileID: 176730507}
   - component: {fileID: 176730508}
-  - component: {fileID: 176730509}
   m_Layer: 7
   m_Name: JokerCardGroup
   m_TagString: Untagged
@@ -369,12 +368,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8436a7e3d3df42d7a7058aec5e41a69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectedCard: {fileID: 0}
-  hoveredCard: {fileID: 0}
   slotPrefab: {fileID: 3655645598659960977, guid: e99c361e7acdd41f0b904fef6be48fea, type: 3}
   cardsToSpawn: 4
   cards: []
-  tweenCardReturn: 1
 --- !u!212 &176730505
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -415,7 +411,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: -1
+  m_SortingOrder: -10
   m_Sprite: {fileID: 21300000, guid: 7330cce1d61aa4b70ac8b9d4e4145854, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -474,18 +470,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 8, y: 1.5, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &176730509
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 176730501}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3ea33c671cdc4df2a697dc2a9143c62e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &411764397
 GameObject:
   m_ObjectHideFlags: 0
@@ -1248,12 +1232,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8436a7e3d3df42d7a7058aec5e41a69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectedCard: {fileID: 0}
-  hoveredCard: {fileID: 0}
   slotPrefab: {fileID: 3655645598659960977, guid: e99c361e7acdd41f0b904fef6be48fea, type: 3}
   cardsToSpawn: 8
   cards: []
-  tweenCardReturn: 1
 --- !u!222 &667881470
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1302,7 +1283,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: -1
+  m_SortingOrder: -10
   m_Sprite: {fileID: 21300000, guid: 7330cce1d61aa4b70ac8b9d4e4145854, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1418,12 +1399,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8436a7e3d3df42d7a7058aec5e41a69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  selectedCard: {fileID: 0}
-  hoveredCard: {fileID: 0}
   slotPrefab: {fileID: 3655645598659960977, guid: e99c361e7acdd41f0b904fef6be48fea, type: 3}
   cardsToSpawn: 2
   cards: []
-  tweenCardReturn: 1
 --- !u!212 &732881785
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -1464,7 +1442,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: -1
+  m_SortingOrder: -10
   m_Sprite: {fileID: 21300000, guid: 7330cce1d61aa4b70ac8b9d4e4145854, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -2262,7 +2240,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bcc74dfd8deac31408351bcb9b5496e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentHolder: {fileID: 0}
+  currentContainer: {fileID: 0}
   hoveredCard: {fileID: 0}
   currentCard: {fileID: 0}
   PointerEnterEvent:

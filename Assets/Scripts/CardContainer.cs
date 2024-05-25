@@ -15,6 +15,7 @@ public class CardContainer : MonoBehaviour,IPointer
     private SpriteRenderer _spriteRenderer;
     
     private TransformLayout _layout;
+    private bool _cardsLayoutDirty = true;
     private void Awake()
     {
         _layout = GetComponent<TransformLayout>();
@@ -40,7 +41,6 @@ public class CardContainer : MonoBehaviour,IPointer
             card.name = cardCount.ToString();
             cardCount++;
         }
-        _layout.Refresh();
     }
 
 
@@ -55,6 +55,11 @@ public class CardContainer : MonoBehaviour,IPointer
             }
         }*/
 
+        if (_cardsLayoutDirty)
+        {
+            _layout.Refresh();
+        }
+        
         Card currentCard = PlayerInput.Instance.currentCard;
         
         if (PlayerInput.Instance.currentContainer != this|| currentCard == null)
@@ -107,62 +112,38 @@ public class CardContainer : MonoBehaviour,IPointer
         Debug.Assert(cards.Contains(insetCard));
         cards.Remove(insetCard);
         cards.Insert(index,insetCard);
-        Transform cardParent = insetCard.transform.parent;
+        Transform cardParent = insetCard.slotTransform;
         cardParent.transform.SetSiblingIndex(index);
-        insetCard.DetachSlot();
-        _layout.Refresh();
-        insetCard.AttachSlot();
     }
     void InsertCardAt(Card insetCard,int index)
     {
         Debug.Log($"{insetCard},{index}");
         Debug.Assert(!cards.Contains(insetCard));
-        Transform cardParent = insetCard.transform.parent;
-        insetCard.SetParent(this);
-        cards.Insert(index,insetCard);
-        cardParent.transform.SetSiblingIndex(index);
+        insetCard.SetParent(this,index);
         foreach (Card card in cards)
         {
             card.cardVisual.UpdateIndex(transform.childCount);
             
         }
-        insetCard.DetachSlot();
-        _layout.Refresh();
-        insetCard.AttachSlot();
     }
-    void Swap(int index)
-    {
-        /*Transform focusedParent = selectedCard.transform.parent;
-        Transform crossedParent = cards[index].transform.parent;
+    
 
-        cards[index].transform.SetParent(focusedParent);
-        cards[index].transform.localPosition = cards[index].selected ? new Vector3(0, cards[index].selectionOffset, 0) : Vector3.zero;
-        selectedCard.transform.SetParent(crossedParent);
-
-        if (cards[index].cardVisual == null)
-            return;
-
-        bool swapIsRight = cards[index].ParentIndex() > selectedCard.ParentIndex();
-        cards[index].cardVisual.Swap(swapIsRight ? -1 : 1);
-
-        //Updated Visual Indexes
-        foreach (Card card in cards)
-        {
-            card.cardVisual.UpdateIndex(transform.childCount);
-        }*/
-    }
-
-    public void AddCard(Card card, bool refresh=true)
+    public void AddCard(Card card,int index = -1)
     {
         Debug.Assert(card.parent == null, "Already has parent!");
-        cards.Add(card);
-        _layout.Refresh();
+        _cardsLayoutDirty = true;
+        if (index == -1)
+        {
+            index = cards.Count;
+        }
+        cards.Insert(index,card);    
+        card.transform.SetSiblingIndex(index);
     }
-    public void RemoveCard(Card card, bool refresh=true)
+    public void RemoveCard(Card card)
     {
         Debug.Assert(card.parent != this, "Should call after set card parent!");
+        _cardsLayoutDirty = true;
         cards.Remove(card);
-        _layout.Refresh();
     }
     public void OnPointerEnter()
     {

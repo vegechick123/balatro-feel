@@ -18,6 +18,7 @@ public class TransformLayout : MonoBehaviour
         foreach (var child in childs)
         {
             //if(ignoreTransform != child)
+            
             child.localPosition = new Vector3(offset, 0, 0);
             offset += spacing;
         }
