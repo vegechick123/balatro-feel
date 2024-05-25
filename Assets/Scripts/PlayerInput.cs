@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 public class PlayerInput : MonoBehaviour
 {
@@ -18,7 +19,7 @@ public class PlayerInput : MonoBehaviour
         _instance = null;
     }
 
-    public HorizontalCardHolder currentHolder;
+    [FormerlySerializedAs("currentHolder")] public CardContainer currentContainer;
 
     public Card hoveredCard;
     public Card currentCard;

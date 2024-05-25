@@ -32,7 +32,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     [Header("States")]
     public bool isHovering;
     public bool isDragging;
-    public HorizontalCardHolder parent;
+    public CardContainer parent;
     [HideInInspector] public bool wasDragged;
 
     [Header("Events")]
@@ -56,15 +56,18 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         transform.SetParent(_slotTransform,true);
     }
     
-    public void SetParent(HorizontalCardHolder inParent)
+    public void SetParent(CardContainer inParent)
     {
-        HorizontalCardHolder originParent = parent; 
+        CardContainer originParent = parent; 
         parent = inParent;
         transform.parent.SetParent(inParent.transform,true);
         if (originParent)
         {
             originParent.RemoveCard(this);
         }
+        
+        parent.AddCard(this);
+        
     }
 
     private void Awake()

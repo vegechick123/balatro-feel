@@ -26,7 +26,7 @@ public class CardVisual : MonoBehaviour
     private Canvas shadowCanvas;
     [SerializeField] private Transform shakeParent;
     [SerializeField] private Transform tiltParent;
-    [SerializeField] private Image cardImage;
+    [SerializeField] private SpriteRenderer cardSprite;
 
     [Header("Follow Parameters")]
     [SerializeField] private float followSpeed = 30;
@@ -75,8 +75,6 @@ public class CardVisual : MonoBehaviour
         //Declarations
         parentCard = target;
         cardTransform = target.transform;
-        canvas = GetComponent<Canvas>();
-        shadowCanvas = visualShadow.GetComponent<Canvas>();
 
         //Event Listening
         parentCard.PointerEnterEvent.AddListener(PointerEnter);
@@ -172,13 +170,10 @@ public class CardVisual : MonoBehaviour
     {
         if(scaleAnimations)
             transform.DOScale(scaleOnSelect, scaleTransition).SetEase(scaleEase);
-
-        canvas.overrideSorting = true;
     }
 
     private void EndDrag(Card card)
     {
-        canvas.overrideSorting = false;
         transform.DOScale(1, scaleTransition).SetEase(scaleEase);
     }
 
@@ -201,10 +196,8 @@ public class CardVisual : MonoBehaviour
     {
         if(scaleAnimations)
             transform.DOScale(longPress ? scaleOnHover : scaleOnSelect, scaleTransition).SetEase(scaleEase);
-        canvas.overrideSorting = false;
 
         visualShadow.localPosition = shadowDistance;
-        shadowCanvas.overrideSorting = true;
     }
 
     private void PointerDown(Card card)
@@ -213,7 +206,6 @@ public class CardVisual : MonoBehaviour
             transform.DOScale(scaleOnSelect, scaleTransition).SetEase(scaleEase);
             
         visualShadow.localPosition += (-Vector3.up * shadowOffset);
-        shadowCanvas.overrideSorting = false;
     }
 
 }
